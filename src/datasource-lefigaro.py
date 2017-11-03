@@ -49,7 +49,7 @@ class DataSourceLeFigaro(DataSource):
 
         self.writeArticleList(all_articles, 'lefigaro.json')
 
-    def writeArticleList(articles, filename):
+    def writeArticleList(self, articles, filename):
         """writes the given array of datasets to filename in json format"""
         f = open(filename, 'w')
         f.write(json.dumps(articles, default=json_serial))
