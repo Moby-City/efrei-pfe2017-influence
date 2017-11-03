@@ -59,18 +59,20 @@ class DataSourceUlule():
 
                 # find all ulule project hrefs
                 # b-blink__link html class for projects
-                rawLinks = soup.findAll('a', href=True, class_="b-blink__link")
+                #rawLinks = soup.findAll('a', href=True, class_="b-blink__link")
 
                 # find next page in search results
-                nextPage = soup.findAll('a', href=True, class_="page")[0]
+                #nextPage = soup.findAll('a', href=True, class_="page")[0]
+
+                links = soup.findAll('a', href=True)
 
                 # Crawling deeper with found hrefs
-                # if page not in crawled:
-                #     for l in links:
-                #         if self.isValidUrl(l['href']):
-                #             tocrawl.append(l['href'])
-                #
-                #     crawled.append(page)
+                if page not in crawled:
+                    for l in links:
+                        if self.isValidUrl(l['href']):
+                            tocrawl.append(l['href'])
+
+                    crawled.append(page)
 
         return crawled
 
