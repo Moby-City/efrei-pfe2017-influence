@@ -1,4 +1,3 @@
-/orgranization.py
 class Organization():
 
     def __init__(self,
