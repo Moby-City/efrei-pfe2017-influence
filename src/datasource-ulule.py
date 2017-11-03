@@ -61,6 +61,7 @@ class DataSourceUlule():
                 # b-blink__link html class for projects
                 #rawLinks = soup.findAll('a', href=True, class_="b-blink__link")
 
+
                 # find next page in search results
                 #nextPage = soup.findAll('a', href=True, class_="page")[0]
 
