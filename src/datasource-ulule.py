@@ -1,93 +1,78 @@
 from datasource import DataSource
+from dataset import DataSet
 import re
-import httplib
-import urllib2
-from urlparse import urlparse
+import json
+import urllib3
+import newspaper
 from bs4 import BeautifulSoup
+from datetime import datetime, date
 
+http = urllib3.PoolManager()
 
-"""
-DataSource Class for Ulule.com
-Update:
-- Ulule API only works for own projects
-
-"""
-regex = re.compile(
-        r'^(?:http|ftp)s?://' # http:// or https://
-        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
-        r'localhost|' #localhost...
-        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
-        r'(?::\d+)?' # optional port
-        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    else:
+        return obj.__dict__
 
 class DataSourceUlule():
 
-    def __init__(self,searchterms):
-        self.URL           = 'https://www.ulule.com/discover/'
-        self.SEARCH_URL    = self.URL+'?q='
-        self.apikey        = '0c7364d43e84e99fccdefac66405e0480ac06900'
-        self.searchterms   = searchterms
-        self.crawled_hrefs = []
+  def __init__(self):
+    self.URL           = 'https://www.ulule.com/discover/'
+    self.SEARCH_URL    = self.URL+'?q='
+    self.URL_BASE = 'https://fr.ulule.com'
 
-    # Check if URL matches all requirements for being a real URL
-    # @return: TRUE if url meets regex requirements
-    def isValidUrl(self,url):
-        if regex.match(url) is not None:
-            return True;
-        return False
+  # Crawls webpage for every defined searchterm
+  # @return: list of all crawled URLs
+  def findAll(self):
+    all_projects = []
+    next_url = self.URL_BASE + '/discover/all/'
 
-    # Crawls webpage for every defined searchterm
-    # @return: list of all crawled URLs
-    def crawler(self):
+    # step 1: gather all project names and links
+    page = 1
+    while page < 5:
+      print('Fetching page ' + str(page))
+      page = page + 1
+      s = http.request('GET', next_url).data.decode('utf-8')
+      soup = BeautifulSoup(s, 'html.parser')
 
-        crawled = []
+      projects = soup.select('a.b-blink__link')
+      now = datetime.now()
+      for project in projects:
+        title = project.select_one('h2.b-blink__title').text.strip()
+        author = project.select_one('.b-blink__author').text.strip()
+        all_projects.append(DataSet(None, project['href'], now, self, author, title))
 
-        for term in self.searchterms:
+      # find next page url
+      next_link = soup.select_one('#results-footer li.active + li a')
+      if not next_link:
+        break
+      else:
+        next_url = self.URL_BASE + next_link['href']
 
-            tocrawl = [self.SEARCH_URL + term]
+    # step 2: load each project description page and gather its description
+    for project in all_projects:
+      print('Download info for ' + project.url)
+      na = newspaper.Article(project.url)
+      na.download()
+      na.parse()
+      project.text = na.text
+      project.media = na.top_image
+      project.author = ', '.join(na.authors)
+      project.published_date = na.publish_date
 
-            while tocrawl:
+    self.writeProjectList(all_projects, 'ulule.json')
 
-                page = tocrawl.pop()
+  def writeProjectList(self, projects, filename):
+    """writes the given array of organizations to filename in json format"""
+    f = open(filename, 'w')
+    f.write(json.dumps(projects, default=json_serial))
 
-                print 'Crawled:' + page
-
-                pagesource = urllib2.urlopen(page)
-                s = pagesource.read()
-
-                soup = BeautifulSoup(s, "html5lib")
-
-                # find all ulule project hrefs
-                # b-blink__link html class for projects
-                #rawLinks = soup.findAll('a', href=True, class_="b-blink__link")
-
-                # find next page in search results
-                #nextPage = soup.findAll('a', href=True, class_="page")[0]
-
-                links = soup.findAll('a', href=True)
-
-                # Crawling deeper with found hrefs
-                if page not in crawled:
-                    for l in links:
-                        if self.isValidUrl(l['href']):
-                            tocrawl.append(l['href'])
-
-                    crawled.append(page)
-
-        return crawled
 
 '''
 Testing
 '''
-searchterms = ['ngo']
+obj = DataSourceUlule()
 
-obj = DataSourceUlule(searchterms)
-
-obj.crawler()
-
-print "done."
-
-
-
-
-
+obj.findAll()
