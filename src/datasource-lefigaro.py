@@ -26,7 +26,10 @@ class DataSourceLeFigaro(DataSource):
         # step 1: query the search to get all article urls
         while True:
             result = self.requestPage(page)
-            articles = self.parseSearchResult(BeautifulSoup(result, 'html.parser').select_one('#articles-list'))
+            articles_list = BeautifulSoup(result, 'html.parser').select_one('#articles-list')
+            if not articles_list:
+                break
+            articles = self.parseSearchResult(articles_list)
             print('Loaded page ' + str(page) + ' (' + str(len(articles)) + ' results)')
             if len(articles) < 1:
                 break
