@@ -22,7 +22,7 @@ class DataSourceCNewsMatin(DataSource):
 
         all_articles = []
         page = 0
-        while page < 1:
+        while True:
             result = self.requestPage(page)
             articles = self.parseSearchResult(BeautifulSoup(result, 'html.parser').select_one('.search-results'))
             for a in articles:
@@ -30,7 +30,7 @@ class DataSourceCNewsMatin(DataSource):
 
             if len(articles) < 1:
                 break
-            
+
             all_articles = all_articles + articles
             page = page + 1
 
@@ -47,10 +47,9 @@ class DataSourceCNewsMatin(DataSource):
 
         self.writeArticleList(all_articles, 'cnewsmatin.json')
 
-
     def writeArticleList(self, articles, filename):
         f = open(filename, 'w')
-        f.write(json.dumps(articles, default=json_serial))
+        f.write(json.dumps(articles, default=json_serial, indent=2))
 
     def requestUrl(self, url):
         return http.request('GET',

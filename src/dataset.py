@@ -22,6 +22,7 @@ class DataSet():
         self.published_date = published_date
         self.keywords = keywords
         self.raw_text = raw_text
+        self.is_confirmed = None
 
     def serialize():
         pass

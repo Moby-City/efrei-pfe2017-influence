@@ -1,0 +1,74 @@
+<html>
+	<head>
+
+<style>
+body {
+	font-family: sans-serif;
+}
+article {
+	max-width: 600px;
+	margin: auto;
+}
+img {
+	max-width: 100px;
+	float: right;
+}
+</style>
+	</head>
+
+	<body>
+	</body>
+
+	<script>
+const FILE = 'cnewsmatin.json'
+
+var xml = new XMLHttpRequest()
+xml.open('GET', FILE)
+xml.onload = () => {
+	all_articles = JSON.parse(xml.responseText)
+	article_boxes = all_articles
+		.filter(dataset => dataset.is_confirmed === null)
+		.map(dataset => `
+			<article>
+				<img src="${dataset.media}">
+				<a href="${dataset.url}"><h2>${dataset.title}</h2></a>
+				<small>Author: ${dataset.author}, Date: ${dataset.published_date}</small>
+				<p>${dataset.text.split('\n').join('</p><p>')}</p>
+				<button onclick="isRelated(false, '${dataset.url}')">Not related to NGOs</button>
+				<button onclick="isRelated(true, '${dataset.url}')">Related to NGOs</button>
+			</article>
+		`)
+	showNext()
+}
+
+xml.send()
+
+let all_articles, article_boxes;
+let index = 0
+
+function isRelated(is, url) {
+	all_articles.find(dataset => dataset.url == url).is_confirmed = is
+	showNext()
+}
+function showNext() {
+	document.body.innerHTML = article_boxes[index++]
+	document.body.innerHTML += `<div class="count">${index} / ${article_boxes.length}</div>
+		<button onclick="download()">Prepare Download</button>`
+}
+let file
+function download() {
+	let data = new Blob([JSON.stringify(all_articles, null, 2)], {type: 'text/plain'})
+	let uri = `data:application/octet-stream,${encodeURIComponent(JSON.stringify(all_articles.slice(0, 2)))}`
+	if (file)
+		URL.revokeObjectURL(file)
+	file = URL.createObjectURL(data)
+
+	let a = document.createElement('a')
+	a.href = file
+	a.download = FILE
+	a.innerHTML = 'Download Now'
+	document.body.appendChild(a)
+}
+
+	</script>
+</html>
