@@ -6,7 +6,6 @@ from organization import Organization
 import json
 
 http = urllib3.PoolManager()
-
 URL = 'http://www.carenews.com/fr/organisations'
 
 def json_serial(obj):
@@ -16,17 +15,39 @@ class DataSourceCareNews(DataSource):
     def findAll(self):
         all_organizations = []
 
+        # page 1
         result = self.requestUrl(URL)
         organizations_list = BeautifulSoup(result, 'html.parser').select_one('.organizations-list-items')
-
         organization_urls = self.parseSearchResult(organizations_list)
+
+        print('Parsing page 0')
         for url in organization_urls:
             result = self.requestUrl(url)
             description = self.parseOrganizationDescription(BeautifulSoup(result, 'html.parser'))
             title = self.parseOrganizationTitle(BeautifulSoup(result, 'html.parser'))
             all_organizations.append(Organization(title = title, description = description, url = url))
+        
+        # next pages
+        ids = 10
+        while ids <= 100:
+            urls = 'http://www.carenews.com/fr/organisations?duration=month&country=&cause=&after_ids[non_profit]=' +\
+                    str(ids) +\
+                    '&after_ids[enterprise]=' +\
+                    str(ids) +\
+                    '&q='
+            result = self.requestUrl(urls)
+            organizations_list = BeautifulSoup(result, 'html.parser').select_one('.organizations-list-items')
+            organization_urls = self.parseSearchResult(organizations_list)
 
-            self.writeOrganizationList(all_organizations, 'carenews.json')
+            print('Parsing page ' + str(ids / 10))
+            for url in organization_urls:
+                result = self.requestUrl(url)
+                description = self.parseOrganizationDescription(BeautifulSoup(result, 'html.parser'))
+                title = self.parseOrganizationTitle(BeautifulSoup(result, 'html.parser'))
+                all_organizations.append(Organization(title = title, description = description, url = url))
+            ids = ids + 10
+        
+        self.writeOrganizationList(all_organizations, 'carenews.json')
 
     def parseSearchResult(self, rootElement):
         result_list = []
