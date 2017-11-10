@@ -4,6 +4,7 @@ from dataset import DataSet
 from bs4 import BeautifulSoup
 import json
 import urllib3
+import signal
 from datetime import datetime, date
 
 http = urllib3.PoolManager()
@@ -75,4 +76,6 @@ class DataSourceLeFigaro(DataSource):
             result_list.append(DataSet(text = '', url = url, title = title, datasource=self, crawled_date=now))
         return result_list
 
-DataSourceLeFigaro().findAll()
+d = DataSourceLeFigaro()
+d.findAll()
+

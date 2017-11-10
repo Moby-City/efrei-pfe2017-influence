@@ -1,3 +1,8 @@
 
 FACEBOOK_TOKEN='asdasasdasd'
 FACEBOOK_APP_TOKEN='asdasdasd'
+
+TWITTER_CONSUMER_KEY='asdasasdasd'
+TWITTER_CONSUMER_SECRET='asdasasdasd'
+TWITTER_ACCESS_TOKEN='asdasasdasd'
+TWITTER_ACCESS_SECRET='asdasasdasd'

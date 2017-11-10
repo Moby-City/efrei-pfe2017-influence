@@ -33,7 +33,10 @@ xml.onload = () => {
 				<img src="${dataset.media}">
 				<a href="${dataset.url}"><h2>${dataset.title}</h2></a>
 				<small>Author: ${dataset.author}, Date: ${dataset.published_date}</small>
-				<p>${dataset.text.split('\n').join('</p><p>')}</p>
+				<button onclick="translateText()">Translate to German</button>
+				<div class="content">
+					<p>${dataset.text.split('\n').join('</p><p>')}</p>
+				</div>
 				<button onclick="isRelated(false, '${dataset.url}')">Not related to NGOs</button>
 				<button onclick="isRelated(true, '${dataset.url}')">Related to NGOs</button>
 			</article>
@@ -46,6 +49,54 @@ xml.send()
 let all_articles, article_boxes;
 let index = 0
 
+window.translateText = function translate() {
+	let text = document.getElementsByClassName('content')[0].textContent
+	let xml = new XMLHttpRequest()
+	xml.open('POST', 'https://www.deepl.com/jsonrpc')
+	xml.onload = () => {
+		console.log(JSON.parse(xml.responseText))
+		console.log(JSON.parse(xml.responseText).result.splitted_texts)
+		let texts = JSON.parse(xml.responseText).result.splitted_texts
+
+		let xml2 = new XMLHttpRequest()
+		xml2.open('POST',  'https://www.deepl.com/jsonrpc')
+		xml2.onload = () => {
+			console.log(JSON.parse(xml2.responseText))
+			
+			document.getElementsByClassName('content')[0].innerHTML =
+				'<p>' + JSON.parse(xml2.responseText).result.translations.map(t => t.beams[0].postprocessed_sentence).join('</p><p>') + '</p>'
+		}
+		xml2.send(JSON.stringify({
+			jsonrpc: '2.0',
+			method: 'LMT_handle_jobs',
+			params: {
+				jobs: texts[1].map(text => ({
+					kind: 'default',
+					raw_en_sentence: text,
+				})),
+				lang: {
+					user_preferred_langs: ['EN'],
+					source_lang_user_selected: 'FR',
+					target_lang: 'DE',
+				},
+				priority: -1,
+			},
+			id: 1
+		}))
+	}
+	xml.send(JSON.stringify({
+		jsonrpc: '2.0',
+		method: 'LMT_split_into_sentences',
+		params: {
+			texts: text.split('\n'),
+			lang: {
+				lang_user_selected: 'FR',
+				user_preferred_langs: ['DE'],
+			},
+		},
+		id: 1,
+	}))
+}
 function isRelated(is, url) {
 	all_articles.find(dataset => dataset.url == url).is_confirmed = is
 	showNext()
