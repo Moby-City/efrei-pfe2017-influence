@@ -117,6 +117,7 @@ function showNext() {
 	document.body.innerHTML = article_boxes[index++]
 	document.body.innerHTML += `<div class="count">${index} / ${article_boxes.length}</div>
 		<button onclick="download()">Prepare Download</button>`
+	document.body.scroll(0, 0)
 }
 let file
 function download() {
