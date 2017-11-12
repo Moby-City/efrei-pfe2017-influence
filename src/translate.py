@@ -6,12 +6,14 @@ articles = []
 
 with open(sys.argv[-1], 'r') as f:
     articles = json.load(f)
-    for i in range(0, 10):
-        print('%s (%s/%s)' % (articles[i]['title'], i + 1, len(articles)))
-        articles[i]['translated_text'] = deepl.translate(articles[i]['text'], target='DE')[0]
-        articles[i]['translated_title'] = deepl.translate(articles[i]['title'], target='DE')[0]
-        print('\t=> %s' % (articles[i]['translated_title']))
+    todo = [article for article in articles if not 'translated_text' in article]
+    num = int(sys.argv[-2])
+    for i in range(0, num):
+        print('%s (%s/%s)' % (todo[i]['title'], i + 1, num))
+        todo[i]['translated_text'] = deepl.translate(todo[i]['text'], target='DE')[0]
+        todo[i]['translated_title'] = deepl.translate(todo[i]['title'], target='DE')[0]
+        print('\t=> %s' % (todo[i]['translated_title']))
 
 with open(sys.argv[-1], 'w') as f:
-    f.write(json.dumps(articles))
+    f.write(json.dumps(articles, indent=2))
 
