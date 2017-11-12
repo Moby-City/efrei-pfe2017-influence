@@ -20,20 +20,20 @@ img {
 	</body>
 
 	<script>
-const FILE = 'cnewsmatin.json'
+const FILE = 'lefigaro.json'
 
 var xml = new XMLHttpRequest()
 xml.open('GET', FILE)
 xml.onload = () => {
 	all_articles = JSON.parse(xml.responseText)
-	article_boxes = all_articles
-		.filter(dataset => dataset.is_confirmed === null)
+	displayed_articles = all_articles.filter(dataset => dataset.is_confirmed === null)
+	article_boxes = displayed_articles
 		.map(dataset => `
 			<article>
 				<img src="${dataset.media}">
 				<a href="${dataset.url}"><h2>${dataset.title}</h2></a>
 				<small>Author: ${dataset.author}, Date: ${dataset.published_date}</small>
-				<button onclick="translateText()">Translate to German</button>
+				<button onclick="toggleTranslated()">Toggle Translated</button>
 				<div class="content">
 					<p>${dataset.text.split('\n').join('</p><p>')}</p>
 				</div>
@@ -46,16 +46,26 @@ xml.onload = () => {
 
 xml.send()
 
-let all_articles, article_boxes;
+let all_articles, article_boxes, displayed_articles
 let index = 0
+let hasUnsaved = false
+let showingTranslated = false
+
+window.toggleTranslated = function toggleTranslated() {
+	showingTranslated = !showingTranslated
+	console.log(showingTranslated)
+	let text = displayed_articles[index][showingTranslated ? 'translated_text' : 'text']
+	let title = displayed_articles[index][showingTranslated ? 'translated_title' : 'title']
+	document.getElementsByTagName('h2')[0].textContent = title
+	document.getElementsByClassName('content')[0].innerHTML =
+		'<p>' + text.split('\n').join('</p><p>') + '</p>'
+}
 
 window.translateText = function translate() {
 	let text = document.getElementsByClassName('content')[0].textContent
 	let xml = new XMLHttpRequest()
 	xml.open('POST', 'https://www.deepl.com/jsonrpc')
 	xml.onload = () => {
-		console.log(JSON.parse(xml.responseText))
-		console.log(JSON.parse(xml.responseText).result.splitted_texts)
 		let texts = JSON.parse(xml.responseText).result.splitted_texts
 
 		let xml2 = new XMLHttpRequest()
@@ -98,10 +108,12 @@ window.translateText = function translate() {
 	}))
 }
 function isRelated(is, url) {
+	hasUnsaved = true
 	all_articles.find(dataset => dataset.url == url).is_confirmed = is
 	showNext()
 }
 function showNext() {
+	showingTranslated = false
 	document.body.innerHTML = article_boxes[index++]
 	document.body.innerHTML += `<div class="count">${index} / ${article_boxes.length}</div>
 		<button onclick="download()">Prepare Download</button>`
@@ -119,6 +131,11 @@ function download() {
 	a.download = FILE
 	a.innerHTML = 'Download Now'
 	document.body.appendChild(a)
+}
+
+window.onbeforeunload = function() {
+	if (hasUnsaved)
+		return 'File has not been downloaded yet. All non-downloaded votes will be lost.'
 }
 
 	</script>

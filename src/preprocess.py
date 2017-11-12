@@ -2,7 +2,6 @@ import nltk
 import sys
 import json
 
-
 stopwords = set(nltk.corpus.stopwords.words('french'))
 stopwords.update(['.', ',', '"', "'", '?', '!', ':', ';', '(', ')', '[', ']', '{', '}', '\'', '\'\'', '``', '`', '»', '«', '...'])
 
