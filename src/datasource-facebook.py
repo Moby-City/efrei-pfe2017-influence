@@ -2,6 +2,7 @@ from datasource import DataSource
 import json
 import urllib3
 import config
+import sys
 
 http = urllib3.PoolManager()
 
@@ -51,6 +52,16 @@ class DataSourceFacebook(DataSource):
     def getPageInfo(self, pageId):
         pass
 
-DataSourceFacebook().findAll()
+    def findPostsForPage(self, pageId):
+        queryString = BASE_URL + '/' + pageId + '?fields=posts.limit(' + str(LIMIT) + '){message,full_picture,link}&access_token=' + config.FACEBOOK_TOKEN
+        result = json.loads(http.request('GET', queryString).data.decode('utf-8'))
 
+        filename = sys.path[0] + '/../output/facebook/' + pageId + '.json'
+        f = open(filename, 'w')
+        f.write(json.dumps(result))
 
+#DataSourceFacebook().findAll()
+selected_ngos = ['TousBenevoles', 'EntourageReseauCivique', 'haitiski', 'FVolontaires', 'urbanrefugees', '100000rencontressolidaires', 'lionsclubs', 'AideEtActionInternational']
+
+for ngo in selected_ngos:
+    DataSourceFacebook().findPostsForPage(ngo)
