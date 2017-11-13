@@ -5,6 +5,7 @@ from datetime import datetime, date
 from dataset import DataSet
 import newspaper
 import json
+import sys
 
 URL = 'http://cnewsmatin.fr'
 SEARCH_URL = URL + '/rechercher/'
@@ -45,7 +46,7 @@ class DataSourceCNewsMatin(DataSource):
             article.published_date = na.publish_date
             article.media = na.top_image
 
-        self.writeArticleList(all_articles, 'cnewsmatin.json')
+        self.writeArticleList(all_articles, sys.path[0] + '/../output/cnewsmatin.json')
 
     def writeArticleList(self, articles, filename):
         f = open(filename, 'w')

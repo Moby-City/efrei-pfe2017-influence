@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import newspaper
 from organization import Organization
 import json
+import sys
 
 http = urllib3.PoolManager()
 URL = 'http://www.carenews.com/fr/organisations'
@@ -47,7 +48,7 @@ class DataSourceCareNews(DataSource):
                 all_organizations.append(Organization(title = title, description = description, url = url))
             ids = ids + 10
         
-        self.writeOrganizationList(all_organizations, 'carenews.json')
+        self.writeOrganizationList(all_organizations, sys.path[0] + '/../output/carenews.json')
 
     def parseSearchResult(self, rootElement):
         result_list = []

@@ -6,6 +6,7 @@ import json
 import urllib3
 import signal
 from datetime import datetime, date
+import sys
 
 http = urllib3.PoolManager()
 
@@ -48,7 +49,7 @@ class DataSourceLeFigaro(DataSource):
             article.published_date = na.publish_date
             article.media = na.top_image
 
-        self.writeArticleList(all_articles, 'lefigaro.json')
+        self.writeArticleList(all_articles, sys.path[0] + '/../output/lefigaro.json')
 
     def writeArticleList(self, articles, filename):
         """writes the given array of datasets to filename in json format"""

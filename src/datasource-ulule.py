@@ -6,6 +6,7 @@ import urllib3
 import newspaper
 from bs4 import BeautifulSoup
 from datetime import datetime, date
+import sys
 
 http = urllib3.PoolManager()
 
@@ -62,7 +63,7 @@ class DataSourceUlule():
       project.author = ', '.join(na.authors)
       project.published_date = na.publish_date
 
-    self.writeProjectList(all_projects, 'ulule.json')
+    self.writeProjectList(all_projects, sys.path[0] + '/../output/ulule.json')
 
   def writeProjectList(self, projects, filename):
     """writes the given array of organizations to filename in json format"""

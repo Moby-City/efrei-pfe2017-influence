@@ -5,6 +5,7 @@ import dateutil.parser
 import config
 import json
 import tweepy
+import sys
 
 def json_serial(obj):
     """JSON serializer for objects not serializable by default json code"""
@@ -35,7 +36,7 @@ class DataSourceLeFigaro(DataSource):
                 author=self.twitterHandle,
                 media=media,
                 published_date=dateutil.parser.parse(data["created_at"])))
-        self.writeArticleList(tweets, 'twitter-who.json')
+        self.writeArticleList(tweets, sys.path[0] + '/../output/twitter-who.json')
 
     def writeArticleList(self, articles, filename):
         """writes the given array of datasets to filename in json format"""
