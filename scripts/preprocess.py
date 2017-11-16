@@ -14,7 +14,7 @@ stopwords.update(['.', ',', '"', "'", '?', '!', ':', ';', '(', ')', '[', ']', '{
 
 out = 'text,ngo\n'
 
-for article in json.load(open(sys.argv[-1], 'r'))[0:100]:
+for article in json.load(open(sys.argv[-1], 'r')):
     data = nltk.word_tokenize(article['text'])
 
     data = [t.lower() for t in data if t.lower() not in stopwords]
