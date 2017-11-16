@@ -2,6 +2,10 @@ import sys
 import json
 import deepl
 
+if len(sys.argv) < 3 or not sys.argv[-2].isdigit():
+    print('Usage: translate.py NUM_TO_TRANSLATE IN_FILE.json')
+    sys.exit(1)
+
 articles = []
 
 with open(sys.argv[-1], 'r') as f:
