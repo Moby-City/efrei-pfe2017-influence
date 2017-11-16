@@ -49,7 +49,7 @@ class DataSource():
         name = '%s-%s%s.json' % (
                 datetime.now().strftime('%Y-%m-%d'),
                 self.identifier(),
-                '-' + ''.join(filter(str.isalnum, suffix) if suffix else ''))
+                ('-' + ''.join(filter(str.isalnum, suffix)) if suffix else ''))
         path = os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
                 '..',
