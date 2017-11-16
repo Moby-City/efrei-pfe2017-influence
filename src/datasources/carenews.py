@@ -27,7 +27,7 @@ class DataSourceCareNews(DataSource):
             description = self.parseOrganizationDescription(BeautifulSoup(result, 'html.parser'))
             title = self.parseOrganizationTitle(BeautifulSoup(result, 'html.parser'))
             all_organizations.append(Organization(title = title, description = description, url = url))
-        
+
         # next pages
         ids = 10
         while ids <= 10:

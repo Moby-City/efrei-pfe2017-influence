@@ -2,26 +2,17 @@ from datasource import DataSource
 import newspaper
 from dataset import DataSet
 from bs4 import BeautifulSoup
-import json
-import urllib3
+from datetime import datetime
 import signal
-from datetime import datetime, date
 import sys
 
-http = urllib3.PoolManager()
-
-USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.75 Safari/537.36'
 URL = 'http://recherche.lefigaro.fr/recherche/'
 
-def json_serial(obj):
-    """JSON serializer for objects not serializable by default json code"""
-    if isinstance(obj, (datetime, date)):
-        return obj.isoformat()
-    else:
-        return obj.__dict__
-
 class DataSourceLeFigaro(DataSource):
-    def findAllFor(self, search_term):
+    def identifier(self):
+        return 'lefigaro'
+
+    def find_all_for(self, search_term):
         all_articles = []
         page = 1
 
@@ -49,19 +40,7 @@ class DataSourceLeFigaro(DataSource):
             article.published_date = na.publish_date
             article.media = na.top_image
 
-        self.writeArticleList(all_articles, sys.path[0] + '/../output/lefigaro.json')
-
-    def writeArticleList(self, articles, filename):
-        """writes the given array of datasets to filename in json format"""
-        f = open(filename, 'w')
-        f.write(json.dumps(articles, default=json_serial))
-
-    def requestUrl(self, url):
-        """fetches the html content at the given URL (while pretending to be a browser)"""
-        return http.request('GET',
-                url,
-                headers={'user-agent': USER_AGENT}
-            ).data.decode('utf-8')
+        self.save_results(all_articles)
 
     def requestPage(self, page):
         """fetches the html for one page of search results from lefigaro"""
