@@ -1,10 +1,8 @@
-from datasource import DataSource
 import json
-import urllib3
-import config
+from ..config import FACEBOOK_APP_TOKEN, FACEBOOK_TOKEN
 import sys
 
-http = urllib3.PoolManager()
+from .datasource import DataSource
 
 FIELDS = 'category_list'
 QUERY = 'who'
@@ -13,7 +11,11 @@ LIMIT = 99999
 
 class DataSourceFacebook(DataSource):
 
-    def findAll(self):
+    @staticmethod
+    def identifier():
+        return 'facebook'
+
+    def find_all(self):
         data = self.getPageOfPages()
         print(data)
         all_pages = data['data']
@@ -35,7 +37,7 @@ class DataSourceFacebook(DataSource):
             'type': 'page',
             'limit': LIMIT,
             'fields': FIELDS,
-            'access_token': config.FACEBOOK_TOKEN,
+            'access_token': FACEBOOK_TOKEN,
             'after': afterToken
         })
 
@@ -44,7 +46,7 @@ class DataSourceFacebook(DataSource):
         for param, value in queryParams.items():
             if value:
                 query += param + '=' + str(value) + '&'
-        result = json.loads(http.request('GET', BASE_URL + path + query).data.decode('utf-8'))
+        result = json.loads(self.request_url(BASE_URL + path + query))
         if 'error' in result:
             raise IOError(result['error']['message'])
         return result
@@ -53,15 +55,11 @@ class DataSourceFacebook(DataSource):
         pass
 
     def findPostsForPage(self, pageId):
-        queryString = BASE_URL + '/' + pageId + '?fields=posts.limit(' + str(LIMIT) + '){message,full_picture,link}&access_token=' + config.FACEBOOK_TOKEN
-        result = json.loads(http.request('GET', queryString).data.decode('utf-8'))
+        query_url = BASE_URL + '/' + pageId + '?fields=posts.limit(' + str(LIMIT) + '){message,full_picture,link}&access_token=' + FACEBOOK_TOKEN
+        result = json.loads(self.request_url(query_url))
 
         filename = sys.path[0] + '/../output/facebook/' + pageId + '.json'
         f = open(filename, 'w')
         f.write(json.dumps(result))
 
-#DataSourceFacebook().findAll()
-selected_ngos = ['TousBenevoles', 'EntourageReseauCivique', 'haitiski', 'FVolontaires', 'urbanrefugees', '100000rencontressolidaires', 'lionsclubs', 'AideEtActionInternational']
-
-for ngo in selected_ngos:
-    DataSourceFacebook().findPostsForPage(ngo)
+# selected_ngos = ['TousBenevoles', 'EntourageReseauCivique', 'haitiski', 'FVolontaires', 'urbanrefugees', '100000rencontressolidaires', 'lionsclubs', 'AideEtActionInternational']
