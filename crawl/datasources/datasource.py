@@ -69,12 +69,12 @@ class DataSource():
             self.fetch_details_for(article)
             progress = progress + 1
 
-    def request_url(self, url):
+    def request_url(self, url, encoding='utf-8'):
         """fetches the html content at the given URL (while pretending to be a browser)"""
         return self.http.request('GET',
                 url,
                 headers={'user-agent': self.USER_AGENT}
-            ).data.decode('utf-8')
+            ).data.decode(encoding)
 
     def verify_language(self, text):
         """given a text, verify that it is in a relevant language"""
@@ -86,12 +86,16 @@ class DataSource():
 
     def fetch_details_for(self, dataset):
         """given a dataset whose url field is filled, fill more detail fields"""
-        na = newspaper.Article(dataset.url)
-        na.download()
-        na.parse()
-        if not dataset.title:
-            dataset.title = na.title
-        dataset.text = na.text
-        dataset.author = ', '.join(na.authors)
-        dataset.published_date = na.publish_date
-        dataset.media = na.top_image
+        try:
+            na = newspaper.Article(dataset.url)
+            na.download()
+            na.parse()
+            if not dataset.title:
+                dataset.title = na.title
+            dataset.text = na.text
+            dataset.author = ', '.join(na.authors)
+            dataset.published_date = na.publish_date
+            dataset.media = na.top_image
+        except:
+            print('Could not retrieve data for ' + dataset.url)
+            pass

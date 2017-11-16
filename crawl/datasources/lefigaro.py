@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from datetime import datetime
+import datetime
 
 from .datasource import DataSource
 from ..dataset import DataSet
@@ -11,6 +11,24 @@ class DataSourceLeFigaro(DataSource):
     @staticmethod
     def identifier():
         return 'lefigaro'
+
+    def find_all(self):
+        days_to_query = 5
+        date = datetime.date.today()
+        now = datetime.datetime.now()
+
+        while days_to_query > 0:
+            print('Fetching page for %s (%s to go)' % (date.strftime('%Y-%m-%d'), days_to_query))
+            # first link is back to the overview, so skip it
+            self.add_all_results([DataSet(None, a['href'], now, self)
+                for a in BeautifulSoup(
+                    self.request_url('http://articles.lefigaro.fr/' + date.strftime('%Y%m/%d/'), 'latin-1'),
+                    'html.parser').select('.SiteMap a')[1:]])
+            days_to_query = days_to_query - 1
+            date = date - datetime.timedelta(1)
+
+        self.fetch_all_result_details()
+        self.save_results()
 
     def find_all_for(self, search_term):
         page = 1
@@ -38,7 +56,7 @@ class DataSourceLeFigaro(DataSource):
     def parse_search_result(self, rootElement):
         """given a root element, enumerate all section elements and created dataset objects filled with title and url"""
         result_list = []
-        now = datetime.now()
+        now = datetime.datetime.now()
         for article in rootElement.select('section'):
             url = article.select_one('h2 a')['href']
             title = article.select_one('h2 a').text.strip()
