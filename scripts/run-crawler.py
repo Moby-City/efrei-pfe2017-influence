@@ -4,6 +4,12 @@ import sys
 import os
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')))
 
+config_file_path = os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'crawl', 'config.py'))
+if not os.path.isfile(config_file_path):
+    from shutil import copy
+    print('Note: creating unconfigured config file')
+    copy(config_file_path + '.dist', config_file_path)
+
 from crawl.datasources.lefigaro import DataSourceLeFigaro
 from crawl.datasources.carenews import DataSourceCareNews
 from crawl.datasources.ulule import DataSourceUlule
