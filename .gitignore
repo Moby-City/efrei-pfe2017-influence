@@ -1,6 +1,6 @@
 __pycache__
 *.pyc
-src/config.py
-src/*.json
+crawl/config.py
 *.json
-output
+output/*
+!output/.gitkeep
