@@ -23,13 +23,14 @@ class DataSourceTwitter(DataSource):
             data = status._json
             url = data['urls'][0]['url'] if 'urls' in data and len(data['url']) > 0 else ''
             media = data['media'][0]['media_url_https'] if 'media' in data and len(data['media']) > 0 else ''
-            self.add_result(DataSet(
-                data['text'],
-                url,
-                now,
-                self,
-                author=twitter_handle,
-                media=media,
-                published_date=dateutil.parser.parse(data["created_at"])))
+            if self.verify_language(data['text']):
+                self.add_result(DataSet(
+                    data['text'],
+                    url,
+                    now,
+                    self,
+                    author=twitter_handle,
+                    media=media,
+                    published_date=dateutil.parser.parse(data["created_at"])))
 
         self.save_results(twitter_handle)

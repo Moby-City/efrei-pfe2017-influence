@@ -1,4 +1,5 @@
 from datetime import datetime, date
+import langdetect
 import newspaper
 import json
 import urllib3
@@ -74,6 +75,10 @@ class DataSource():
                 url,
                 headers={'user-agent': self.USER_AGENT}
             ).data.decode('utf-8')
+
+    def verify_language(self, text):
+        """given a text, verify that it is in a relevant language"""
+        return langdetect.detect(text) == 'fr'
 
     ######################
     # semi-private helpers
