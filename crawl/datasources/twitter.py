@@ -33,6 +33,3 @@ class DataSourceTwitter(DataSource):
                 published_date=dateutil.parser.parse(data["created_at"])))
 
         self.save_results(twitter_handle)
-
-if __name__ == '__main__':
-    DataSourceLeFigaro('@WHO').findAll()

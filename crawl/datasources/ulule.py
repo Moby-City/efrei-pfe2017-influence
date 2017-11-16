@@ -12,12 +12,11 @@ class DataSourceUlule(DataSource):
 
   def __init__(self):
     super().__init__()
-    self.URL           = 'https://www.ulule.com/discover/'
-    self.SEARCH_URL    = self.URL + '?q='
     self.URL_BASE      = 'https://fr.ulule.com'
+    self.URL           = self.URL_BASE + '/discover'
 
   def find_all(self):
-    next_url = self.URL_BASE + '/discover/all/'
+    next_url = self.URL + '/all/'
 
     page = 1
     while True:

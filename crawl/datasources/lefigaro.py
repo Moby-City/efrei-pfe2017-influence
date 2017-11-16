@@ -15,7 +15,7 @@ class DataSourceLeFigaro(DataSource):
     def find_all_for(self, search_term):
         page = 1
 
-        while page < 2:
+        while True:
             result = self.request_page(page, search_term)
             articles_list = BeautifulSoup(result, 'html.parser').select_one('#articles-list')
             if not articles_list:
