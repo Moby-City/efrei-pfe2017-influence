@@ -28,8 +28,9 @@ class DataSourceCareNews(DataSource):
 
         # next pages
         ids = 10
-        while ids <= 10:
-            urls = 'http://www.carenews.com/fr/organisations?duration=month&country=&cause=&after_ids[non_profit]=' +\
+        while True:
+            urls = URL +\
+                    '?duration=month&country=&cause=&after_ids[non_profit]=' +\
                     str(ids) +\
                     '&after_ids[enterprise]=' +\
                     str(ids) +\
