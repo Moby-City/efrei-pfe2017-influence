@@ -2,7 +2,7 @@ from datasource import DataSource
 import urllib3
 from bs4 import BeautifulSoup
 import newspaper
-from organization import Organization
+from .. import organization
 import json
 import sys
 
@@ -30,7 +30,7 @@ class DataSourceCareNews(DataSource):
         
         # next pages
         ids = 10
-        while ids <= 100:
+        while ids <= 10:
             urls = 'http://www.carenews.com/fr/organisations?duration=month&country=&cause=&after_ids[non_profit]=' +\
                     str(ids) +\
                     '&after_ids[enterprise]=' +\

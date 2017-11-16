@@ -21,12 +21,12 @@ def json_serial(obj):
         return obj.__dict__
 
 class DataSourceLeFigaro(DataSource):
-    def findAll(self):
+    def findAllFor(self, search_term):
         all_articles = []
         page = 1
 
         # step 1: query the search to get all article urls
-        while True:
+        while page < 2:
             result = self.requestPage(page)
             articles_list = BeautifulSoup(result, 'html.parser').select_one('#articles-list')
             if not articles_list:
@@ -65,7 +65,7 @@ class DataSourceLeFigaro(DataSource):
 
     def requestPage(self, page):
         """fetches the html for one page of search results from lefigaro"""
-        return self.requestUrl(URL + 'ong/' if page == 1 else URL + 'ong/?page=' + str(page))
+        return self.requestUrl(URL + search_term + '/' if page == 1 else URL + search_term + '/?page=' + str(page))
 
     def parseSearchResult(self, rootElement):
         """given a root element, enumerate all section elements and created dataset objects filled with title and url"""
@@ -77,6 +77,4 @@ class DataSourceLeFigaro(DataSource):
             result_list.append(DataSet(text = '', url = url, title = title, datasource=self, crawled_date=now))
         return result_list
 
-d = DataSourceLeFigaro()
-d.findAll()
-
+DataSourceLeFigaro().findAllFor('ong')

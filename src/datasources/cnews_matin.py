@@ -19,11 +19,11 @@ def json_serial(obj):
         return obj.__dict__
 
 class DataSourceCNewsMatin(DataSource):
-    def findAll(self):
+    def findAllFor(self, search_term):
 
         all_articles = []
         page = 0
-        while True:
+        while page < 2:
             result = self.requestPage(page)
             articles = self.parseSearchResult(BeautifulSoup(result, 'html.parser').select_one('.search-results'))
             for a in articles:
@@ -59,7 +59,7 @@ class DataSourceCNewsMatin(DataSource):
             ).data.decode('utf-8')
 
     def requestPage(self, page):
-        return self.requestUrl(SEARCH_URL + 'ong' if page == 0 else SEARCH_URL + 'ong?page=' + str(page))
+        return self.requestUrl(SEARCH_URL + search_term if page == 0 else SEARCH_URL + search_term + '?page=' + str(page))
 
     def parseSearchResult(self, rootElement):
         result_list = []
@@ -70,4 +70,4 @@ class DataSourceCNewsMatin(DataSource):
             result_list.append(DataSet(text = '', url = url, title = '', datasource = self, crawled_date = now))
         return result_list
 
-DataSourceCNewsMatin().findAll()
+DataSourceCNewsMatin().findAllFor('ong')
