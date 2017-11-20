@@ -3,6 +3,7 @@ import nltk
 import os
 import sys
 import json
+import csv
 
 if len(sys.argv) < 2:
     print('Usage: preprocess.py IN_FILE.json (--> produces IN_FILE.csv)')
@@ -12,19 +13,21 @@ stopwords = set(nltk.corpus.stopwords.words('french'))
 stopwords.update([w[0:-1] for w in open(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'data', 'french-stopwords.txt'))][1:])
 stopwords.update(['.', ',', '"', "'", '?', '!', ':', ';', '(', ')', '[', ']', '{', '}', '\'', '\'\'', '``', '`', '»', '«', '...'])
 
-out = 'text,ngo\n'
+with open(sys.argv[-1][0:-4] + 'csv', 'w') as f:
+    writer = csv.writer(f, delimiter=',', quotechar="|")
 
-for article in json.load(open(sys.argv[-1], 'r')):
-    data = nltk.word_tokenize(article['text'])
+    # out = 'text,ngo\n'
 
-    data = [t.lower() for t in data if t.lower() not in stopwords]
+    for article in json.load(open(sys.argv[-1], 'r')):
+        data = nltk.word_tokenize(article['text'].replace('\n', ' '))
 
-    stemmer = nltk.SnowballStemmer('french')
-    data = [stemmer.stem(t) for t in data]
+        data = [t.lower() for t in data if t.lower() not in stopwords]
 
-    wnl = nltk.WordNetLemmatizer()
-    data = [wnl.lemmatize(t) for t in data]
+        stemmer = nltk.SnowballStemmer('french')
+        data = [stemmer.stem(t) for t in data]
 
-    out = out + '"%s","%s"\n' % (' '.join(data), 'NGO' if article['is_confirmed'] else 'non-NGO')
+        wnl = nltk.WordNetLemmatizer()
+        data = [wnl.lemmatize(t) for t in data]
 
-open(sys.argv[-1][0:-4] + 'csv', 'w').write(out)
+        writer.writerow([' '.join(data), 'NGO' if article['is_confirmed'] else 'non-NGO'])
+
