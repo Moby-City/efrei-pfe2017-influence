@@ -1,8 +1,10 @@
 import json
-from ..config import FACEBOOK_APP_TOKEN, FACEBOOK_TOKEN
 import sys
+from datetime import datetime
 
 from .datasource import DataSource
+from ..dataset import DataSet
+from ..config import FACEBOOK_APP_TOKEN, FACEBOOK_TOKEN
 
 FIELDS = 'category_list'
 QUERY = 'who'
@@ -15,7 +17,7 @@ class DataSourceFacebook(DataSource):
     def identifier():
         return 'facebook'
 
-    def find_all(self):
+    def find_organizations(self):
         data = self.getPageOfPages()
         print(data)
         all_pages = data['data']
@@ -54,12 +56,29 @@ class DataSourceFacebook(DataSource):
     def getPageInfo(self, pageId):
         pass
 
-    def findPostsForPage(self, pageId):
-        query_url = BASE_URL + '/' + pageId + '?fields=posts.limit(' + str(LIMIT) + '){message,full_picture,link}&access_token=' + FACEBOOK_TOKEN
+    def find_all_for(self, pageId):
+        query_url = BASE_URL +\
+                '/' +\
+                pageId +\
+                '?fields=posts.limit(' +\
+                str(LIMIT) +\
+                '){message,full_picture,link,permalink_url}&access_token=' +\
+                FACEBOOK_TOKEN
+        
         result = json.loads(self.request_url(query_url))
-
-        filename = sys.path[0] + '/../output/facebook/' + pageId + '.json'
-        f = open(filename, 'w')
-        f.write(json.dumps(result))
-
-# selected_ngos = ['TousBenevoles', 'EntourageReseauCivique', 'haitiski', 'FVolontaires', 'urbanrefugees', '100000rencontressolidaires', 'lionsclubs', 'AideEtActionInternational']
+            
+        if 'error' in result:
+            print(result['error']['message'])
+            sys.exit(1)
+        else:
+            now = datetime.now()
+            for post in result['posts']['data']:
+                if 'message' in post:
+                    self.add_result(DataSet(
+                        post['message'],
+                        post['permalink_url'],
+                        now,
+                        self,
+                        media=post['full_picture'] if 'full_picture' in post else None))
+        
+            self.save_results(pageId)
