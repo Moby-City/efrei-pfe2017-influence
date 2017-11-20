@@ -4,3 +4,4 @@ crawl/config.py
 *.json
 output/*
 !output/.gitkeep
+scripts/node_modules
