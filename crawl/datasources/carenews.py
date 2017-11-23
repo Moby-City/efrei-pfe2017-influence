@@ -16,10 +16,9 @@ class DataSourceCareNews(DataSource):
         return 'carenews'
 
     def find_all(self):
-        all_articles = []
         page = 1
 
-        while page < 2:
+        while page < 25:
 
             result = self.request_url(
                     ARTICLES_URL +\
@@ -34,7 +33,6 @@ class DataSourceCareNews(DataSource):
             if len(articles_list) < 1:
                 break
             self.parse_article_list(articles_list)
-
             page = page + 1
 
         self.fetch_all_result_details()
