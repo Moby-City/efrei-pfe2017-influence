@@ -31,7 +31,7 @@ class DataSourceCareNews(DataSource):
                     '&search[country_ids]=')
 
             articles_list = BeautifulSoup(result, 'html.parser').select_one('.archive-holder')
-            if len(articles_list < 1):
+            if len(articles_list) < 1:
                 break
             self.parse_article_list(articles_list)
 
