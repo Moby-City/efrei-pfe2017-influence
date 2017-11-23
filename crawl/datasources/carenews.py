@@ -1,9 +1,13 @@
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 from ..organization import Organization
+from ..dataset import DataSet
 from .datasource import DataSource
 
-URL = 'http://www.carenews.com/fr/organisations'
+BASE_URL = 'http://www.carenews.com/fr/'
+ORGANIZATION_URL = BASE_URL + 'organisations'
+ARTICLES_URL = BASE_URL + 'timeline'
 
 class DataSourceCareNews(DataSource):
 
@@ -12,10 +16,39 @@ class DataSourceCareNews(DataSource):
         return 'carenews'
 
     def find_all(self):
+        page = 1
+
+        while page < 25:
+
+            result = self.request_url(
+                    ARTICLES_URL +\
+                    '?papge=' +\
+                    str(page) +\
+                    '&search[non_profit_ids]=' +\
+                    '&search[content_types]=Article' +\
+                    '&search[cause_ids]=' +\
+                    '&search[country_ids]=')
+
+            articles_list = BeautifulSoup(result, 'html.parser').select_one('.archive-holder')
+            if len(articles_list) < 1:
+                break
+            self.parse_article_list(articles_list)
+            page = page + 1
+
+        self.fetch_all_result_details()
+        self.save_results()
+
+    def parse_article_list(self, rootElement):
+        now = datetime.now()
+        for article in rootElement.select('article'):
+            url = article['data-href']
+            self.add_result(DataSet(None, url, now, self, None, None))
+
+    def find_all_organizations(self):
         all_organizations = []
 
         # page 1
-        result = self.request_url(URL)
+        result = self.request_url(ORGANIZATION_URL)
         organizations_list = BeautifulSoup(result, 'html.parser').select_one('.organizations-list-items')
         organization_urls = self.parse_search_result(organizations_list)
 
