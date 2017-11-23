@@ -1,4 +1,5 @@
 from datetime import datetime, date
+from bs4 import BeautifulSoup
 import langdetect
 import newspaper
 import json
@@ -81,6 +82,10 @@ class DataSource():
                 url,
                 headers={'user-agent': self.USER_AGENT}
             ).data.decode(encoding)
+
+    def request_node(self, url, encoding='utf-8'):
+        """fetches the html and parses it"""
+        return BeautifulSoup(self.request_url(url, encoding), 'html.parser')
 
     def verify_language(self, text):
         """given a text, verify that it is in a relevant language"""
