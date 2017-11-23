@@ -4,6 +4,9 @@ import newspaper
 import json
 import urllib3
 import os
+import time
+
+from ..config import FETCH_INTERVAL
 
 def json_serial(obj):
     """JSON serializer for objects not serializable by default json code"""
@@ -68,6 +71,9 @@ class DataSource():
             print('Loading [%s/%s] %s' % (progress, len(self.results), article.url))
             self.fetch_details_for(article)
             progress = progress + 1
+
+            if FETCH_INTERVAL > 0:
+                time.sleep(FETCH_INTERVAL)
 
     def request_url(self, url, encoding='utf-8'):
         """fetches the html content at the given URL (while pretending to be a browser)"""
