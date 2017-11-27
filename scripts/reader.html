@@ -1,5 +1,6 @@
 <html>
 	<head>
+		<meta charset="utf-8">
 
 <style>
 body {
@@ -20,7 +21,7 @@ img {
 	</body>
 
 	<script>
-const FILE = 'lefigaro.json'
+const FILE = '/output/2017-11-21-lefigaro-association.json'
 
 var xml = new XMLHttpRequest()
 xml.open('GET', FILE)
@@ -47,7 +48,7 @@ xml.onload = () => {
 xml.send()
 
 let all_articles, article_boxes, displayed_articles
-let index = 0
+let index = -1
 let hasUnsaved = false
 let showingTranslated = false
 
@@ -114,7 +115,7 @@ function isRelated(is, url) {
 }
 function showNext() {
 	showingTranslated = false
-	document.body.innerHTML = article_boxes[index++]
+	document.body.innerHTML = article_boxes[++index]
 	document.body.innerHTML += `<div class="count">${index} / ${article_boxes.length}</div>
 		<button onclick="download()">Prepare Download</button>`
 	document.body.scroll(0, 0)
