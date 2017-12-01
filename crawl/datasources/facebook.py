@@ -9,7 +9,7 @@ from ..config import FACEBOOK_APP_TOKEN, FACEBOOK_TOKEN
 FIELDS = 'category_list'
 QUERY = 'who'
 BASE_URL = 'https://graph.facebook.com/v2.10'
-LIMIT = 99999
+LIMIT = 999
 
 class DataSourceFacebook(DataSource):
 
@@ -56,6 +56,14 @@ class DataSourceFacebook(DataSource):
     def getPageInfo(self, pageId):
         pass
 
+    def getIdentifier(self, post):
+        if 'permalink_url' in post:
+            return post['permalink_url']
+        elif 'link' in post:
+            return 'external:' + post['link']
+        else:
+            return pageId + '/' + post['id']
+
     def find_all_for(self, pageId):
         query_url = BASE_URL +\
                 '/' +\
@@ -76,7 +84,7 @@ class DataSourceFacebook(DataSource):
                 if 'message' in post:
                     self.add_result(DataSet(
                         post['message'],
-                        post['permalink_url'],
+                        self.getIdentifier(post),
                         now,
                         self,
                         media=post['full_picture'] if 'full_picture' in post else None))
