@@ -81,7 +81,7 @@ class DataSourceFacebook(DataSource):
         else:
             now = datetime.now()
             for post in result['posts']['data']:
-                if 'message' in post:
+                if 'message' in post and self.verify_language(post['message']):
                     self.add_result(DataSet(
                         post['message'],
                         self.getIdentifier(post),
