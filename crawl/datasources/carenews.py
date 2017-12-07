@@ -8,6 +8,7 @@ from .datasource import DataSource
 BASE_URL = 'http://www.carenews.com/fr/'
 ORGANIZATION_URL = BASE_URL + 'organisations'
 ARTICLES_URL = BASE_URL + 'timeline'
+SEARCH_URL = BASE_URL + 'search?q='
 
 class DataSourceCareNews(DataSource):
 
@@ -37,6 +38,15 @@ class DataSourceCareNews(DataSource):
 
         self.fetch_all_result_details()
         self.save_results()
+
+    def find_all_for(self, searchTerm):
+        now = datetime.now()
+        articles = [DataSet(None, article['data-href'], now, self)
+            for article in self.request_node(SEARCH_URL + searchTerm)
+                .select('#search-results-article .archive-holder article')]
+        self.add_all_results(articles)
+        self.fetch_all_result_details()
+        self.save_results(searchTerm)
 
     def parse_article_list(self, rootElement):
         now = datetime.now()

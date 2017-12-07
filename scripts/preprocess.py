@@ -23,11 +23,11 @@ with open(sys.argv[-1][0:-4] + 'csv', 'w') as f:
 
         data = [t.lower() for t in data if t.lower() not in stopwords]
 
-        stemmer = nltk.SnowballStemmer('french')
-        data = [stemmer.stem(t) for t in data]
+        #stemmer = nltk.SnowballStemmer('french')
+        #data = [stemmer.stem(t) for t in data]
 
-        wnl = nltk.WordNetLemmatizer()
-        data = [wnl.lemmatize(t) for t in data]
+        #wnl = nltk.WordNetLemmatizer()
+        #data = [wnl.lemmatize(t) for t in data]
 
-        writer.writerow([' '.join(data), 'NGO' if article['is_confirmed'] else 'non-NGO'])
+        writer.writerow([' '.join(data), 'NGO' if article['is_confirmed'] else ( 'X' if article['is_confirmed'] is None else 'non-NGO')])
 
