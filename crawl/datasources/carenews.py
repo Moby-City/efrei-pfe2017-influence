@@ -21,19 +21,21 @@ class DataSourceCareNews(DataSource):
 
         while page < 25:
 
-            result = self.request_url(
-                    ARTICLES_URL +\
-                    '?papge=' +\
-                    str(page) +\
-                    '&search[non_profit_ids]=' +\
-                    '&search[content_types]=Article' +\
-                    '&search[cause_ids]=' +\
-                    '&search[country_ids]=')
+            print("Fetching page %s" % page)
+            now = datetime.now()
+            url = '%s?page=%s&search[content_types]=Article' % (ARTICLES_URL,
+                    str(page))
 
-            articles_list = BeautifulSoup(result, 'html.parser').select_one('.archive-holder')
-            if len(articles_list) < 1:
+            if self.add_all_results([DataSet(None, a['data-href'], now, self, None, None)
+                    for a in self.request_node(url).select('.archive-holder article')]) < 1:
                 break
-            self.parse_article_list(articles_list)
+
+            if len(self.results) > len(set(self.results)):
+                print("DUPLICATES!")
+                print(page)
+                print(url)
+                break
+
             page = page + 1
 
         self.fetch_all_result_details()

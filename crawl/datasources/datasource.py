@@ -45,6 +45,7 @@ class DataSource():
 
     def add_all_results(self, datasets):
         self.results = self.results + datasets
+        return len(datasets)
 
     def add_result(self, dataset):
         self.results.append(dataset)

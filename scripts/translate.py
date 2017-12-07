@@ -12,7 +12,7 @@ articles = []
 
 with open(sys.argv[-1], 'r') as f:
     articles = json.load(f)
-    todo = [article for article in articles if not 'translated_text' in article]
+    todo = [article for article in articles if not 'translated_text' in article and article['is_confirmed'] is None]
     num = int(sys.argv[-2])
     for i in range(0, num):
         print('%s (%s/%s)' % (todo[i]['title'], i + 1, num))
