@@ -14,7 +14,7 @@ def json_serial(obj):
     if isinstance(obj, (datetime, date)):
         return obj.isoformat()
     elif isinstance(obj, DataSource):
-        return obj.identifier()
+        return obj.exact_identifier()
     else:
         return obj.__dict__
 
@@ -23,7 +23,12 @@ class DataSource():
 
     def __init__(self):
         self.http = urllib3.PoolManager()
+        self.search_term = None
         self.results = []
+        self.save_results_after_find = True
+
+    def exact_identifier(self):
+        return self.search_term + '-' + self.__class__.identifier() if self.search_term else self.__class__.identifier()
 
     ###################
     # to be implemented
@@ -39,6 +44,11 @@ class DataSource():
     def find_all_for(self, search_term):
         raise NotImplementedError()
 
+    def get_all_for(self, search_term):
+        self.save_results_after_find = False
+        self.find_all_for(search_term)
+        return self.results
+
     ##################
     # public utilities
     ##################
@@ -50,21 +60,26 @@ class DataSource():
     def add_result(self, dataset):
         self.results.append(dataset)
 
-    def save_results(self, suffix = None):
+    def out_filepath(self, suffix = None):
         """save results to /output/$identifier.json"""
         name = '%s-%s%s.json' % (
                 datetime.now().strftime('%Y-%m-%d'),
                 self.identifier(),
                 ('-' + ''.join(filter(str.isalnum, suffix)) if suffix else ''))
-        path = os.path.join(
+        return os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
                 '..',
                 '..',
                 'output',
                 name)
+
+    def save_results(self, suffix = None):
+        if not self.save_results_after_find:
+            return
+        path = self.out_filepath(suffix)
         with open(path, 'w') as f:
             f.write(json.dumps(self.results, default=json_serial, indent=2))
-            print('Saved ' + name)
+            print('Saved ' + path)
 
     def fetch_all_result_details(self):
         """iterates over all results and tries to add more detailed information"""
@@ -91,6 +106,13 @@ class DataSource():
     def verify_language(self, text):
         """given a text, verify that it is in a relevant language"""
         return langdetect.detect(text) == 'fr'
+
+    def safe_verify_language(self, text):
+        """if langdetect fails, return True"""
+        try:
+            return self.verify_language(text)
+        except langdetect.lang_detect_exception.LangDetectException:
+            return True
 
     ######################
     # semi-private helpers

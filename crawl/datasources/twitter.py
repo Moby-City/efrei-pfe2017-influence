@@ -12,25 +12,47 @@ class DataSourceTwitter(DataSource):
     def identifier():
         return 'twitter'
 
-    def find_all_for(self, twitter_handle):
+    def _twitter_api(self):
         auth = tweepy.OAuthHandler(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
         auth.set_access_token(TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_SECRET)
-        api = tweepy.API(auth)
+        return tweepy.API(auth)
+
+    def find_users(self, query):
+        api = self._twitter_api()
+        for user in tweepy.Cursor(api.search_users, q=query, lang='fr').items():
+            print(user)
+
+    def find_all_for(self, twitter_handle):
+        api = self._twitter_api()
         now = datetime.now()
 
         tweets = []
-        for status in tweepy.Cursor(api.user_timeline, screen_name=twitter_handle).items():
-            data = status._json
-            url = data['urls'][0]['url'] if 'urls' in data and len(data['url']) > 0 else ''
-            media = data['media'][0]['media_url_https'] if 'media' in data and len(data['media']) > 0 else ''
-            if self.verify_language(data['text']):
+        try:
+            for status in tweepy.Cursor(api.user_timeline, screen_name=twitter_handle).items():
+                data = status._json
+                media = (data['extended_entities']['media'][0]['media_url_https']
+                    if 'extended_entities' in data and
+                        'media' in data['extended_entities'] and
+                        len(data['extended_entities']['media']) > 0
+                        else '')
+
                 self.add_result(DataSet(
                     data['text'],
-                    url,
+                    'https://twitter.com/statuses/' + data['id_str'],
                     now,
                     self,
                     author=twitter_handle,
                     media=media,
-                    published_date=dateutil.parser.parse(data["created_at"])))
+                    published_date=dateutil.parser.parse(data["created_at"]),
+                    extra={
+                        'favorites': data['favorite_count'],
+                        'retweets': data['retweet_count']
+                    }))
 
-        self.save_results(twitter_handle)
+            self.save_results(twitter_handle)
+        except tweepy.error.TweepError as err:
+            if err.response.status_code != 404 and err.response.status_code != 401:
+                raise err
+            else:
+                print("SKIPPING INVALID " + twitter_handle)
+            

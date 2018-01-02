@@ -18,6 +18,7 @@ from crawl.datasources.twitter import DataSourceTwitter
 from crawl.datasources.cnews_matin import DataSourceCNewsMatin
 from crawl.datasources.afp import DataSourceAFP
 from crawl.datasources.parisfr import DataSourceParisFR
+from crawl.datasources.vingt_minutes import DataSource20Minutes
 
 datasources = [
     DataSourceLeFigaro,
@@ -27,7 +28,8 @@ datasources = [
     DataSourceTwitter,
     DataSourceCareNews,
     DataSourceAFP,
-    DataSourceParisFR
+    DataSourceParisFR,
+    DataSource20Minutes
 ]
 
 if len(sys.argv) < 2:

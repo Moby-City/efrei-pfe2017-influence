@@ -15,14 +15,6 @@ class DocIterator(object):
             # print 'creating tagged document...%d' % idx
             yield TaggedDocument(words=doc.split(), tags=[self.labels_list[idx]])
 
-class LabeledLineSentence(object):
-    def __init__(self, doc_list, labels_list):
-       self.labels_list = labels_list
-       self.doc_list = doc_list
-    def __iter__(self):
-        for idx, doc in enumerate(self.doc_list):
-            yield LabeledSentence(words=doc.split(),labels=[self.labels_list[idx]])
-
 results = [json.load(open(name, 'r')) for name in sys.argv[1:]]
 data = [article for result in results for article in result]
 
@@ -60,7 +52,7 @@ for epoch in range(3):
     # fix the learning rate, no deca
     model.min_alpha = model.alpha
     model.train(it, total_examples=len(docs), epochs=model.iter)
-#model.save('doc2vec-lefigaro.model')
+model.save('all.model')
 
 def compare_to(filename):
     #print('THIS IS THE TEXT TO BE SEARCHED:' + data[0]['text'])
