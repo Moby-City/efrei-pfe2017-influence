@@ -14,6 +14,9 @@ img {
 	max-width: 100px;
 	float: right;
 }
+strong {
+	background: yellow;
+}
 </style>
 	</head>
 
@@ -22,21 +25,22 @@ img {
 
 	<script>
 const FILE = '/output/2017-11-21-lefigaro-association.json'
+const WITH_SERVER = true
 
 var xml = new XMLHttpRequest()
-xml.open('GET', FILE)
+xml.open('GET', WITH_SERVER ? '/data' : FILE)
 xml.onload = () => {
 	all_articles = JSON.parse(xml.responseText)
-	displayed_articles = all_articles.filter(dataset => dataset.is_confirmed === null)
+	displayed_articles = all_articles.filter(dataset => dataset.is_confirmed === null && !!dataset.text)
 	article_boxes = displayed_articles
 		.map(dataset => `
 			<article>
 				<img src="${dataset.media}">
-				<a href="${dataset.url}"><h2>${dataset.title}</h2></a>
+				<a target="_blank" href="${dataset.url}"><h2>${dataset.title}</h2></a>
 				<small>Author: ${dataset.author}, Date: ${dataset.published_date}</small>
 				<button onclick="toggleTranslated()">Toggle Translated</button>
 				<div class="content">
-					<p>${dataset.text.split('\n').join('</p><p>')}</p>
+					<p>${highlight(dataset.text).split('\n').join('</p><p>')}</p>
 				</div>
 				<button onclick="isRelated(false, '${dataset.url}')">Not related to NGOs</button>
 				<button onclick="isRelated(true, '${dataset.url}')">Related to NGOs</button>
@@ -59,7 +63,7 @@ window.toggleTranslated = function toggleTranslated() {
 	let title = displayed_articles[index][showingTranslated ? 'translated_title' : 'title']
 	document.getElementsByTagName('h2')[0].textContent = title
 	document.getElementsByClassName('content')[0].innerHTML =
-		'<p>' + text.split('\n').join('</p><p>') + '</p>'
+		'<p>' + highlight(text).split('\n').join('</p><p>') + '</p>'
 }
 
 window.translateText = function translate() {
@@ -70,7 +74,7 @@ window.translateText = function translate() {
 		let texts = JSON.parse(xml.responseText).result.splitted_texts
 
 		let xml2 = new XMLHttpRequest()
-		xml2.open('POST',  'https://www.deepl.com/jsonrpc')
+		xml2.open('POST', 'https://www.deepl.com/jsonrpc')
 		xml2.onload = () => {
 			console.log(JSON.parse(xml2.responseText))
 			
@@ -113,17 +117,34 @@ function isRelated(is, url) {
 	all_articles.find(dataset => dataset.url == url).is_confirmed = is
 	showNext()
 }
+function highlight(text) {
+	return text.replace(/(Verein|ONG|NGO|Association|association)/g, '<strong>$1</strong>')
+}
 function showNext() {
 	showingTranslated = false
 	document.body.innerHTML = article_boxes[++index]
-	document.body.innerHTML += `<div class="count">${index} / ${article_boxes.length}</div>
-		<button onclick="download()">Prepare Download</button>`
+	document.body.innerHTML += `<div class="count">${index} / ${article_boxes.length}</div>`
+	if (WITH_SERVER)
+		document.body.innerHTML += '<button onclick="save()">Save Progress</button>'
+	else
+		document.body.innerHTML += '<button onclick="download()">Prepare Download</button>'
 	document.body.scroll(0, 0)
 }
+
+function save() {
+	var xml = new XMLHttpRequest()
+	xml.open('POST', '/save')
+	xml.onload = () => {
+		alert(xml.responseText)
+		if (xml.responseStatus == 200)
+			hasUnsaved = false
+	}
+	xml.send(JSON.stringify(all_articles))
+}
+
 let file
 function download() {
 	let data = new Blob([JSON.stringify(all_articles, null, 2)], {type: 'text/plain'})
-	let uri = `data:application/octet-stream,${encodeURIComponent(JSON.stringify(all_articles.slice(0, 2)))}`
 	if (file)
 		URL.revokeObjectURL(file)
 	file = URL.createObjectURL(data)

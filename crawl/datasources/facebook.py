@@ -4,18 +4,32 @@ from datetime import datetime
 
 from .datasource import DataSource
 from ..dataset import DataSet
-from ..config import FACEBOOK_APP_TOKEN, FACEBOOK_TOKEN
+from ..config import FACEBOOK_APP_TOKEN, FACEBOOK_TOKEN, FACEBOOK_CLIENT_ID, FACEBOOK_CLIENT_SECRET
 
 FIELDS = 'category_list'
 QUERY = 'who'
 BASE_URL = 'https://graph.facebook.com/v2.10'
-LIMIT = 99999
+#LIMIT = 999
+LIMIT = 10
+
+cached_app_access_token = None
 
 class DataSourceFacebook(DataSource):
 
     @staticmethod
     def identifier():
         return 'facebook'
+
+    def exact_identifier(self):
+        return identifier()
+
+    def fetch_token(self):
+        return self.getApiCall('/oauth/access_token', {
+            'client_id': FACEBOOK_CLIENT_ID,
+            'client_secret': FACEBOOK_CLIENT_SECRET,
+            'grant_type': 'client_credentials'
+        })['access_token']
+
 
     def find_organizations(self):
         data = self.getPageOfPages()
@@ -56,29 +70,51 @@ class DataSourceFacebook(DataSource):
     def getPageInfo(self, pageId):
         pass
 
+    def getIdentifier(self, post):
+        if 'permalink_url' in post:
+            return post['permalink_url']
+        elif 'link' in post:
+            return 'external:' + post['link']
+        else:
+            return pageId + '/' + post['id']
+
     def find_all_for(self, pageId):
+        global cached_app_access_token
+
+        self.search_term = pageId
+
+        if not cached_app_access_token:
+            cached_app_access_token = self.fetch_token()
+
+        FIELDS = 'message,full_picture,link,permalink_url,created_time,shares,reactions.limit(1).summary(true),likes.limit(1).summary(true),comments.limit(1).summary(true)'
+
         query_url = BASE_URL +\
                 '/' +\
                 pageId +\
-                '?fields=posts.limit(' +\
-                str(LIMIT) +\
-                '){message,full_picture,link,permalink_url}&access_token=' +\
-                FACEBOOK_TOKEN
-        
+                '?fields=posts.limit('+str(LIMIT)+'){' + FIELDS + '}&access_token=' +\
+                cached_app_access_token
+
         result = json.loads(self.request_url(query_url))
-            
+
         if 'error' in result:
             print(result['error']['message'])
-            sys.exit(1)
+            raise RuntimeError(result['error']['message'])
         else:
             now = datetime.now()
             for post in result['posts']['data']:
-                if 'message' in post:
+                print(post)
+                if 'message' in post and self.safe_verify_language(post['message']):
                     self.add_result(DataSet(
                         post['message'],
-                        post['permalink_url'],
+                        self.getIdentifier(post),
                         now,
                         self,
-                        media=post['full_picture'] if 'full_picture' in post else None))
-        
+                        published_date=post['created_time'],
+                        media=post['full_picture'] if 'full_picture' in post else None,
+                        extra={
+                            'reactions': post['reactions']['summary']['total_count'],
+                            'likes': post['likes']['summary']['total_count'],
+                            'comments': post['comments']['summary']['total_count']
+                        }))
+
             self.save_results(pageId)

@@ -11,7 +11,8 @@ class DataSet():
             media='',
             published_date='',
             keywords='',
-            raw_text=''):
+            raw_text='',
+            extra={}):
         self.text = text
         self.url = url
         self.crawled_date = crawled_date
@@ -23,6 +24,14 @@ class DataSet():
         self.keywords = keywords
         self.raw_text = raw_text
         self.is_confirmed = None
+        self.extra = extra
 
-    def serialize():
+    def serialize(self):
         pass
+
+    def set_extra(self, key, value):
+        self.extra[key] = value
+
+    def put_extras_to(self, dest):
+        for key in self.extra:
+            dest[key] = self.extra[key]

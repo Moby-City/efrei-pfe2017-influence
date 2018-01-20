@@ -1,9 +1,14 @@
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 from ..organization import Organization
+from ..dataset import DataSet
 from .datasource import DataSource
 
-URL = 'http://www.carenews.com/fr/organisations'
+BASE_URL = 'http://www.carenews.com/fr/'
+ORGANIZATION_URL = BASE_URL + 'organisations'
+ARTICLES_URL = BASE_URL + 'timeline'
+SEARCH_URL = BASE_URL + 'search?q='
 
 class DataSourceCareNews(DataSource):
 
@@ -12,10 +17,50 @@ class DataSourceCareNews(DataSource):
         return 'carenews'
 
     def find_all(self):
+        page = 1
+
+        while page < 25:
+
+            print("Fetching page %s" % page)
+            now = datetime.now()
+            url = '%s?page=%s&search[content_types]=Article' % (ARTICLES_URL,
+                    str(page))
+
+            if self.add_all_results([DataSet(None, a['data-href'], now, self, None, None)
+                    for a in self.request_node(url).select('.archive-holder article')]) < 1:
+                break
+
+            if len(self.results) > len(set(self.results)):
+                print("DUPLICATES!")
+                print(page)
+                print(url)
+                break
+
+            page = page + 1
+
+        self.fetch_all_result_details()
+        self.save_results()
+
+    def find_all_for(self, searchTerm):
+        now = datetime.now()
+        articles = [DataSet(None, article['data-href'], now, self)
+            for article in self.request_node(SEARCH_URL + searchTerm)
+                .select('#search-results-article .archive-holder article')]
+        self.add_all_results(articles)
+        self.fetch_all_result_details()
+        self.save_results(searchTerm)
+
+    def parse_article_list(self, rootElement):
+        now = datetime.now()
+        for article in rootElement.select('article'):
+            url = article['data-href']
+            self.add_result(DataSet(None, url, now, self, None, None))
+
+    def find_all_organizations(self):
         all_organizations = []
 
         # page 1
-        result = self.request_url(URL)
+        result = self.request_url(ORGANIZATION_URL)
         organizations_list = BeautifulSoup(result, 'html.parser').select_one('.organizations-list-items')
         organization_urls = self.parse_search_result(organizations_list)
 

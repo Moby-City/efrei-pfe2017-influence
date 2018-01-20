@@ -1,17 +1,27 @@
 from bs4 import BeautifulSoup
 from datetime import datetime
+import newspaper
 
 from .datasource import DataSource
 from ..dataset import DataSet
 
 URL = 'http://cnewsmatin.fr'
 SEARCH_URL = URL + '/rechercher/'
+ARTICLES_URL = URL + '/le-direct'
 
 class DataSourceCNewsMatin(DataSource):
 
     @staticmethod
     def identifier():
         return 'cnews_matin'
+
+    def find_all(self):
+        articles = newspaper.build(ARTICLES_URL, memoize_articles=False)
+        now = datetime.now()
+
+        self.add_all_results([DataSet(None, a.url, now, self) for a in articles.articles])
+        self.fetch_all_result_details()
+        self.save_results()
 
     def find_all_for(self, search_term):
         page = 0
